@@ -26,6 +26,10 @@ Každý nástroj má vlastný adresár v platformovom hostiteľovi. StudioUSB je
 
 Obrazové a diskové operácie majú zostať mimo platformovo neutrálneho jadra. V ďalšej iterácii je vhodné vyčleniť ich z code-behind StudioUSB do rozhrania procesora a platformových adaptérov.
 
+## Aktualizácie
+
+`GitHubUpdateService` je Windows adaptér pre GitHub Releases. Kontroluje verzie, sťahuje `StudioHELPER-Setup.exe`, overuje sprievodný SHA-256 súbor a spúšťa setup v režime aktualizácie. `UpdateInfo` je v platformovo neutrálnom jadre, aby budúce hostiteľské aplikácie mohli použiť vlastný transport a inštalátor.
+
 ## Nastavenia
 
 Spoločný súbor je v platformovom používateľskom priečinku `StudioHELPER/settings.json`. Zdrojový adresár StudioUSB sa zámerne neukladá. Pri prvom spustení sa podporuje migrácia starých nastavení z `StudioUSB/settings.json`.

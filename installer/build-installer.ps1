@@ -25,4 +25,7 @@ Compress-Archive -Path (Join-Path $payload "*") -DestinationPath $payloadZip -Co
 & $compiler /nologo /target:winexe /optimize+ "/out:$setup" "/win32manifest:$(Join-Path $PSScriptRoot 'setup.manifest')" "/resource:$payloadZip,StudioHELPER.Payload" "/reference:System.Windows.Forms.dll" "/reference:System.Drawing.dll" "/reference:System.IO.Compression.dll" "/reference:System.IO.Compression.FileSystem.dll" "/reference:Microsoft.CSharp.dll" (Join-Path $PSScriptRoot "StudioHELPER.Setup.cs")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+$hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash
+Set-Content -LiteralPath ($setup + ".sha256") -Value ($hash + "  StudioHELPER-Setup.exe") -Encoding ascii
+
 Write-Output $setup

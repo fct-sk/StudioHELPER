@@ -26,9 +26,19 @@ internal static class SetupProgram
         if (finalIndex >= 0 && finalIndex + 1 < args.Length)
             return FinishUninstall(args[finalIndex + 1]);
 
+        bool updateMode = args.Any(a => string.Equals(a, "/update", StringComparison.OrdinalIgnoreCase));
+        if (updateMode)
+        {
+            int updateIndex = Array.FindIndex(args, a => string.Equals(a, "/update", StringComparison.OrdinalIgnoreCase));
+            int processId;
+            if (updateIndex >= 0 && updateIndex + 1 < args.Length && int.TryParse(args[updateIndex + 1], out processId))
+            {
+                try { Process.GetProcessById(processId).WaitForExit(15000); } catch { }
+            }
+        }
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new SetupForm());
+        Application.Run(new SetupForm(updateMode));
         return 0;
     }
 
@@ -74,6 +84,11 @@ internal static class SetupProgram
             Thread.Sleep(900);
             DeleteShortcut();
             Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\StudioHELPER", false);
+            using (RegistryKey runKey = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (runKey != null) runKey.DeleteValue("StudioHELPER", false);
+            }
             string full = Path.GetFullPath(installDirectory);
             string allowedParent = Path.GetFullPath(Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs"));
@@ -112,7 +127,7 @@ internal static class SetupProgram
         private readonly ProgressBar _progress;
         private readonly Label _status;
 
-        public SetupForm()
+        public SetupForm(bool autoInstall)
         {
             Text = "StudioHELPER Setup";
             ClientSize = new Size(540, 300);
@@ -139,6 +154,7 @@ internal static class SetupProgram
             Controls.AddRange(new Control[] { title, version, text, _launchCheckBox, _progress, _status, _installButton, _cancelButton });
             AcceptButton = _installButton;
             CancelButton = _cancelButton;
+            if (autoInstall) Shown += delegate { BeginInvoke(new Action(delegate { InstallButtonClick(this, EventArgs.Empty); })); };
         }
 
         private void InstallButtonClick(object sender, EventArgs e)
@@ -158,6 +174,7 @@ internal static class SetupProgram
                 File.Copy(Assembly.GetExecutingAssembly().Location, uninstaller, true);
                 CreateShortcut(installDirectory);
                 RegisterUninstaller(installDirectory, uninstaller);
+                RegisterStartup(Path.Combine(installDirectory, "StudioHELPER.exe"));
                 _progress.Value = 100;
                 _status.Text = "Installation complete";
 
@@ -222,6 +239,15 @@ internal static class SetupProgram
                 key.SetValue("UninstallString", "\"" + uninstaller + "\" /uninstall");
                 key.SetValue("NoModify", 1, RegistryValueKind.DWord);
                 key.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+            }
+        }
+
+        private static void RegisterStartup(string executable)
+        {
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run"))
+            {
+                key.SetValue("StudioHELPER", "\"" + executable + "\"");
             }
         }
     }

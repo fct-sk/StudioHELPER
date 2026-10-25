@@ -7,6 +7,7 @@ StudioHELPER je modulárna desktopová aplikácia pre fotografické štúdio. Ak
 - nástroje sú v zvislom paneli ikon na ľavom okraji;
 - po spustení sa zobrazí prázdna úvodná karta s výberom jazyka `System / English / Slovensky`;
 - nástroj sa načíta až po kliknutí na jeho ikonu;
+- ikona nastavení je naspodku panela a obsahuje spúšťanie so systémom, minimalizáciu do systémovej lišty a aktualizácie;
 - prvým nástrojom je **StudioUSB**.
 
 ## StudioUSB
@@ -38,3 +39,9 @@ dotnet build StudioHELPER.sln -c Release --no-restore
 Výsledok: `artifacts/StudioHELPER-Setup.exe`.
 
 Inštalátor umiestni aplikáciu do `%LOCALAPPDATA%\Programs\StudioHELPER`, pridá odkaz do ponuky Štart a zaregistruje odinštalovanie pre aktuálneho používateľa. Aplikácia vyžaduje Microsoft .NET 8 Desktop Runtime.
+
+## Aktualizácie
+
+Aplikácia kontroluje najnovší verejný GitHub Release repozitára `fct-sk/StudioHELPER`. Pri novšej verzii zobrazí indikátor pri nastaveniach. Používateľ môže jedným kliknutím stiahnuť SHA-256 overený `StudioHELPER-Setup.exe`, spustiť aktualizáciu a reštartovať aplikáciu.
+
+Workflow pri tagu `v*` automaticky vytvorí GitHub Release s inštalátorom a súborom `StudioHELPER-Setup.exe.sha256`. Repozitár a Releases musia byť verejné, aby aktualizácie fungovali bez prihlásenia používateľa.

@@ -1,8 +1,12 @@
 name: Windows build
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -25,4 +29,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: StudioHELPER-Windows
-          path: artifacts/StudioHELPER-Setup.exe
+          path: |
+            artifacts/StudioHELPER-Setup.exe
+            artifacts/StudioHELPER-Setup.exe.sha256
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME artifacts/StudioHELPER-Setup.exe artifacts/StudioHELPER-Setup.exe.sha256 --generate-notes

@@ -3,6 +3,8 @@ namespace StudioHELPER.Core;
 public sealed class AppSettings
 {
     public string Language { get; set; } = "system";
+    public bool RunAtSystemStartup { get; set; } = true;
+    public bool MinimizeToSystemTray { get; set; } = true;
     public StudioUsbSettings StudioUsb { get; set; } = new();
 }
 
