@@ -1,43 +1,40 @@
-# StudioUSB 1.1.0
+# StudioHELPER
 
-Slovenská/anglická aplikácia pre Windows 11, ktorá pripraví fotografie na USB.
+StudioHELPER je modulárna desktopová aplikácia pre fotografické štúdio. Aktuálna verzia `0.1.0` podporuje Windows 11; architektúra oddeľuje platformovo neutrálne jadro od hostiteľskej aplikácie, aby bolo možné neskôr pridať macOS a Linux.
 
-## Výstupy
+## Rozhranie
 
-### PRINTSIZE
+- nástroje sú v zvislom paneli ikon na ľavom okraji;
+- po spustení sa zobrazí prázdna úvodná karta s výberom jazyka `System / English / Slovensky`;
+- nástroj sa načíta až po kliknutí na jeho ikonu;
+- prvým nástrojom je **StudioUSB**.
 
-- predvolene kopíruje pôvodné JPG/JPEG bez zmeny a overí ich cez SHA-256;
-- voliteľné **Prevzorkovať** aktivuje vlastnú veľkosť a kvalitu JPEG;
-- nastaviteľná dlhšia alebo kratšia strana;
-- veľkosť v PX alebo CM;
-- pri CM výber 72 dpi (screen), 240 dpi (press) alebo 300 dpi (print);
-- voľba **Nezväčšovať** zachová pôvodné rozmery, ak je cieľ väčší.
+## StudioUSB
 
-### WEBSIZE
+StudioUSB pripravuje webové a tlačové JPG/JPEG súbory, podporuje dlhšiu alebo kratšiu cieľovú stranu, PX/CM, 72/240/300 dpi, samostatnú JPEG kvalitu, voliteľné prevzorkovanie tlačového výstupu, ochranu pred zväčšením a vlastné názvy priečinkov aj príponu súborov. Nezmenené originály overuje cez SHA-256.
 
-- predvolene dlhšia strana 2400 px, JPEG 80 % a prípona `-websize`;
-- vlastná kvalita, prípona, dlhšia/kratšia strana, PX/CM, DPI a voľba **Nezväčšovať**.
+Voliteľné formátovanie povoľuje iba vymeniteľné médium do nastaveného limitu 4–256 GiB. Do 32 GiB používa FAT32, nad 32 GiB exFAT.
 
-Názvy oboch výstupných adresárov sú nastaviteľné. Aplikácia vytvorí aj prázdny TXT súbor pomenovaný podľa zdrojového adresára.
+## Projekty
 
-## Ďalšie funkcie
-
-- jazyk `System`, `English` alebo `Slovensky`;
-- uloženie všetkých nastavení okrem zdrojového adresára;
-- voliteľné formátovanie s bezpečnostným limitom 4, 8, 16, 32, 64, 128 alebo 256 GiB;
-- FAT32 pre médiá do 32 GiB, exFAT pre väčšie médiá;
-- priebehový protokol a záverečná kontrola výstupu.
-
-Nastavenia sú v `%LOCALAPPDATA%\StudioUSB\settings.json`. Formátovanie vyžaduje potvrdenie v aplikácii a následne UAC oprávnenie Windows.
-
-## Požiadavky
-
-- Windows 11 x64
-- Microsoft .NET 8 Desktop Runtime
+- `src/StudioHELPER.Core` – platformovo neutrálne nastavenia, lokalizácia a model nástrojov;
+- `src/StudioHELPER.Windows` – WPF hostiteľ a Windows implementácia StudioUSB;
+- `installer` – používateľský Windows inštalátor bez potreby administrátorských práv;
+- `docs/ARCHITECTURE.md` – pravidlá rozširovania na ďalšie nástroje a platformy.
 
 ## Zostavenie
 
 ```powershell
-dotnet restore StudioUSB.csproj --ignore-failed-sources
-dotnet build StudioUSB.csproj -c Release --no-restore
+dotnet restore StudioHELPER.sln --ignore-failed-sources
+dotnet build StudioHELPER.sln -c Release --no-restore
 ```
+
+## Vytvorenie inštalátora
+
+```powershell
+.\installer\build-installer.ps1
+```
+
+Výsledok: `artifacts/StudioHELPER-Setup.exe`.
+
+Inštalátor umiestni aplikáciu do `%LOCALAPPDATA%\Programs\StudioHELPER`, pridá odkaz do ponuky Štart a zaregistruje odinštalovanie pre aktuálneho používateľa. Aplikácia vyžaduje Microsoft .NET 8 Desktop Runtime.

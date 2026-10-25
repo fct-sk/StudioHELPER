@@ -1,8 +1,8 @@
 using System.Globalization;
 
-namespace StudioUSB;
+namespace StudioHELPER.Core;
 
-internal static class Localization
+public static class Localization
 {
     private static string _language = "en";
 
@@ -24,6 +24,12 @@ internal static class Localization
 
     private static readonly Dictionary<string, string> Slovak = new()
     {
+        ["Home"] = "Domov",
+        ["HomeTitle"] = "StudioHELPER",
+        ["StudioUsb"] = "StudioUSB",
+        ["StudioUsbTitle"] = "StudioUSB",
+        ["HomeTooltip"] = "Úvod",
+        ["StudioUsbTooltip"] = "Príprava fotografií na USB",
         ["Subtitle"] = "Pripraví fotografie na web aj tlač a bezpečne ich uloží na USB.",
         ["Language"] = "Jazyk",
         ["SourceFolder"] = "Zdrojový adresár",
@@ -109,6 +115,12 @@ internal static class Localization
 
     private static readonly Dictionary<string, string> English = new()
     {
+        ["Home"] = "Home",
+        ["HomeTitle"] = "StudioHELPER",
+        ["StudioUsb"] = "StudioUSB",
+        ["StudioUsbTitle"] = "StudioUSB",
+        ["HomeTooltip"] = "Home",
+        ["StudioUsbTooltip"] = "Prepare photos for USB",
         ["Subtitle"] = "Prepares photos for web and print and safely stores them on a USB drive.",
         ["Language"] = "Language",
         ["SourceFolder"] = "Source folder",

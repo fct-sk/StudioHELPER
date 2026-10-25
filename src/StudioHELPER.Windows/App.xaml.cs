@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace StudioUSB;
+namespace StudioHELPER.Windows;
 
 public partial class App : System.Windows.Application
 {

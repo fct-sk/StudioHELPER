@@ -3,6 +3,7 @@ obj/
 release/
 dist/
 publish/
+artifacts/
 FotoUSB-Windows11/
 StudioUSB-Windows11/
 *.zip

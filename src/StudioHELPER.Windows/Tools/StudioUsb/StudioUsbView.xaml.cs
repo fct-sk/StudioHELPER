@@ -1,5 +1,5 @@
 using Microsoft.Win32;
-using System.ComponentModel;
+using StudioHELPER.Core;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -8,54 +8,41 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using MessageBox = System.Windows.MessageBox;
+using Image = System.Drawing.Image;
+using UserControl = System.Windows.Controls.UserControl;
+using Localization = StudioHELPER.Core.Localization;
 
-namespace StudioUSB;
+namespace StudioHELPER.Windows.Tools.StudioUsb;
 
-public partial class MainWindow : Window
+public partial class StudioUsbView : UserControl
 {
     private const int DefaultFormatLimitGiB = 32;
     private const int MaxTargetPixels = 30000;
     private static readonly int[] AllowedFormatLimits = [4, 8, 16, 32, 64, 128, 256];
-    private static readonly string SettingsDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StudioUSB");
-    private static readonly string SettingsPath = Path.Combine(SettingsDirectory, "settings.json");
+    private readonly SettingsStore _settingsStore;
     private CancellationTokenSource? _cancellation;
     private bool _initializing = true;
 
-    public MainWindow()
+    public StudioUsbView(SettingsStore settingsStore)
     {
         InitializeComponent();
-        LanguageComboBox.ItemsSource = new[]
-        {
-            new ChoiceOption("system", "System"),
-            new ChoiceOption("en", "English"),
-            new ChoiceOption("sk", "Slovensky")
-        };
+        _settingsStore = settingsStore;
         FormatLimitComboBox.ItemsSource = AllowedFormatLimits.Select(value => new NumberOption(value, $"{value} GiB")).ToList();
-
-        AppSettings settings = LoadSettings();
-        string language = settings.Language is "en" or "sk" ? settings.Language : "system";
-        LanguageComboBox.SelectedValue = language;
-        Localization.SetLanguage(language);
         ApplyLocalization();
-        ApplySettings(settings);
-        RefreshDrives(settings.TargetDriveRoot);
+        ApplySettings(settingsStore.Settings.StudioUsb);
+        RefreshDrives(settingsStore.Settings.StudioUsb.TargetDriveRoot);
         _initializing = false;
         UpdateControlStates();
-        Closing += MainWindow_Closing;
     }
 
     private static string T(string key) => Localization.T(key);
-    private void MainWindow_Closing(object? sender, CancelEventArgs e) => SaveSettingsFromUi();
 
     private void ApplyLocalization()
     {
-        SubtitleText.Text = T("Subtitle");
-        LanguageLabel.Text = T("Language");
         SourceFolderLabel.Text = T("SourceFolder");
         BrowseButton.Content = T("Choose");
         TargetUsbLabel.Text = T("TargetUsb");
@@ -119,19 +106,17 @@ public partial class MainWindow : Window
         WebDpiComboBox.SelectedValue = webDpi;
     }
 
-    private void LanguageComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    public void RefreshLanguage()
     {
-        if (_initializing) return;
-        Localization.SetLanguage(SelectedString(LanguageComboBox, "system"));
         ApplyLocalization();
         UpdateControlStates();
-        SaveSettingsFromUi();
     }
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFolderDialog { Title = T("SelectSourceTitle"), Multiselect = false };
-        if (dialog.ShowDialog(this) == true) SourceTextBox.Text = dialog.FolderName;
+        bool? result = Window.GetWindow(this) is Window owner ? dialog.ShowDialog(owner) : dialog.ShowDialog();
+        if (result == true) SourceTextBox.Text = dialog.FolderName;
     }
 
     private void RefreshButton_Click(object sender, RoutedEventArgs e) =>
@@ -167,7 +152,7 @@ public partial class MainWindow : Window
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
     {
-        SaveSettingsFromUi();
+        SaveSettings();
         try
         {
             WorkRequest? request = ValidateAndCreateRequest();
@@ -180,7 +165,7 @@ public partial class MainWindow : Window
             ProgressBar.Value = 100;
             StatusTextBlock.Text = T("CompleteStatus");
             AppendLog(T("CompleteLog"));
-            MessageBox.Show(this, T("CompleteDialog"), "StudioUSB", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(T("CompleteDialog"), "StudioUSB", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (OperationCanceledException)
         {
@@ -191,7 +176,7 @@ public partial class MainWindow : Window
         {
             StatusTextBlock.Text = T("FailedStatus");
             AppendLog($"{T("Error")}: {ex.Message}");
-            MessageBox.Show(this, ex.Message, $"StudioUSB – {T("Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, $"StudioUSB – {T("Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -253,7 +238,7 @@ public partial class MainWindow : Window
                 $"{T("SafetyLimit")}: {request.FormatLimitGiB} GiB",
                 $"{T("FileSystem")}: {GetFormatFileSystem(drive.TotalSize)}",
                 $"{T("NewName")}: {request.VolumeLabel}", "", T("Continue"));
-            return MessageBox.Show(this, message, T("ConfirmFormat"), MessageBoxButton.YesNo,
+            return MessageBox.Show(message, T("ConfirmFormat"), MessageBoxButton.YesNo,
                 MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
         string web = Path.Combine(request.TargetRoot, request.WebFolderName);
@@ -262,7 +247,7 @@ public partial class MainWindow : Window
         if (Directory.Exists(web) || Directory.Exists(print) || File.Exists(txt))
         {
             string message = string.Format(T("ReplaceMessage"), request.WebFolderName, request.PrintFolderName);
-            return MessageBox.Show(this, message, T("ReplaceTitle"), MessageBoxButton.YesNo,
+            return MessageBox.Show(message, T("ReplaceTitle"), MessageBoxButton.YesNo,
                 MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
         return true;
@@ -527,17 +512,7 @@ public partial class MainWindow : Window
         return !Regex.IsMatch(value, "^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])($|\\.)", RegexOptions.IgnoreCase);
     }
 
-    private static AppSettings LoadSettings()
-    {
-        try
-        {
-            if (!File.Exists(SettingsPath)) return new AppSettings();
-            return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath)) ?? new AppSettings();
-        }
-        catch { return new AppSettings(); }
-    }
-
-    private void ApplySettings(AppSettings settings)
+    private void ApplySettings(StudioUsbSettings settings)
     {
         PrintFolderTextBox.Text = DefaultIfEmpty(settings.PrintFolderName, "PRINTSIZE");
         WebFolderTextBox.Text = DefaultIfEmpty(settings.WebFolderName, "WEBSIZE");
@@ -561,39 +536,33 @@ public partial class MainWindow : Window
         FormatCheckBox.IsChecked = settings.FormatFirst;
     }
 
-    private void SaveSettingsFromUi()
+    public void SaveSettings()
     {
         if (_initializing) return;
         try
         {
-            var settings = new AppSettings
-            {
-                Language = SelectedString(LanguageComboBox, "system"),
-                PrintFolderName = PrintFolderTextBox.Text,
-                WebFolderName = WebFolderTextBox.Text,
-                Suffix = SuffixTextBox.Text,
-                PrintResample = PrintResampleCheckBox.IsChecked == true,
-                PrintNoUpscale = PrintNoUpscaleCheckBox.IsChecked == true,
-                WebNoUpscale = WebNoUpscaleCheckBox.IsChecked == true,
-                PrintQuality = (int)Math.Round(PrintQualitySlider.Value),
-                WebQuality = (int)Math.Round(WebQualitySlider.Value),
-                PrintSide = SelectedString(PrintSideComboBox, "long"),
-                WebSide = SelectedString(WebSideComboBox, "long"),
-                PrintUnit = SelectedString(PrintUnitComboBox, "px"),
-                WebUnit = SelectedString(WebUnitComboBox, "px"),
-                PrintSize = PrintSizeTextBox.Text,
-                WebSize = WebSizeTextBox.Text,
-                PrintDpi = SelectedNumber(PrintDpiComboBox, 300),
-                WebDpi = SelectedNumber(WebDpiComboBox, 72),
-                FormatFirst = FormatCheckBox.IsChecked == true,
-                VolumeLabel = VolumeLabelTextBox.Text,
-                FormatLimitGiB = SelectedNumber(FormatLimitComboBox, DefaultFormatLimitGiB),
-                TargetDriveRoot = (DriveComboBox.SelectedItem as DriveOption)?.Root
-            };
-            Directory.CreateDirectory(SettingsDirectory);
-            string temporaryPath = SettingsPath + ".tmp";
-            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
-            File.Move(temporaryPath, SettingsPath, true);
+            StudioUsbSettings settings = _settingsStore.Settings.StudioUsb;
+            settings.PrintFolderName = PrintFolderTextBox.Text;
+            settings.WebFolderName = WebFolderTextBox.Text;
+            settings.Suffix = SuffixTextBox.Text;
+            settings.PrintResample = PrintResampleCheckBox.IsChecked == true;
+            settings.PrintNoUpscale = PrintNoUpscaleCheckBox.IsChecked == true;
+            settings.WebNoUpscale = WebNoUpscaleCheckBox.IsChecked == true;
+            settings.PrintQuality = (int)Math.Round(PrintQualitySlider.Value);
+            settings.WebQuality = (int)Math.Round(WebQualitySlider.Value);
+            settings.PrintSide = SelectedString(PrintSideComboBox, "long");
+            settings.WebSide = SelectedString(WebSideComboBox, "long");
+            settings.PrintUnit = SelectedString(PrintUnitComboBox, "px");
+            settings.WebUnit = SelectedString(WebUnitComboBox, "px");
+            settings.PrintSize = PrintSizeTextBox.Text;
+            settings.WebSize = WebSizeTextBox.Text;
+            settings.PrintDpi = SelectedNumber(PrintDpiComboBox, 300);
+            settings.WebDpi = SelectedNumber(WebDpiComboBox, 72);
+            settings.FormatFirst = FormatCheckBox.IsChecked == true;
+            settings.VolumeLabel = VolumeLabelTextBox.Text;
+            settings.FormatLimitGiB = SelectedNumber(FormatLimitComboBox, DefaultFormatLimitGiB);
+            settings.TargetDriveRoot = (DriveComboBox.SelectedItem as DriveOption)?.Root;
+            _settingsStore.Save();
         }
         catch { }
     }
@@ -620,7 +589,7 @@ public partial class MainWindow : Window
 
     private WorkRequest? WarnAndReturn(string message)
     {
-        MessageBox.Show(this, message, "StudioUSB", MessageBoxButton.OK, MessageBoxImage.Warning);
+        MessageBox.Show(message, "StudioUSB", MessageBoxButton.OK, MessageBoxImage.Warning);
         return null;
     }
 
@@ -631,7 +600,6 @@ public partial class MainWindow : Window
         BrowseButton.IsEnabled = !busy;
         RefreshButton.IsEnabled = !busy;
         DriveComboBox.IsEnabled = !busy;
-        LanguageComboBox.IsEnabled = !busy;
         PrintFolderTextBox.IsEnabled = !busy;
         WebFolderTextBox.IsEnabled = !busy;
         SuffixTextBox.IsEnabled = !busy;
@@ -663,31 +631,6 @@ public partial class MainWindow : Window
         int FormatLimitGiB, string WebFolderName, string PrintFolderName, ResizeSettings Print, ResizeSettings Web,
         IReadOnlyList<string> JpegFiles);
     private sealed record WorkProgress(int Percent, string Status, string Detail);
-
-    private sealed class AppSettings
-    {
-        public string Language { get; set; } = "system";
-        public string PrintFolderName { get; set; } = "PRINTSIZE";
-        public string WebFolderName { get; set; } = "WEBSIZE";
-        public string? Suffix { get; set; } = "-websize";
-        public bool PrintResample { get; set; }
-        public bool PrintNoUpscale { get; set; } = true;
-        public bool WebNoUpscale { get; set; } = true;
-        public int PrintQuality { get; set; } = 95;
-        public int WebQuality { get; set; } = 80;
-        public string PrintSide { get; set; } = "long";
-        public string WebSide { get; set; } = "long";
-        public string PrintUnit { get; set; } = "px";
-        public string WebUnit { get; set; } = "px";
-        public string PrintSize { get; set; } = "6000";
-        public string WebSize { get; set; } = "2400";
-        public int PrintDpi { get; set; } = 300;
-        public int WebDpi { get; set; } = 72;
-        public bool FormatFirst { get; set; }
-        public string VolumeLabel { get; set; } = "FOTO";
-        public int FormatLimitGiB { get; set; } = DefaultFormatLimitGiB;
-        public string? TargetDriveRoot { get; set; }
-    }
 
     private sealed class ChoiceOption(string value, string displayName)
     {
