@@ -1,25 +1,52 @@
 <Window x:Class="StudioUSB.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="StudioUSB" Height="820" Width="930" MinHeight="730" MinWidth="820"
+        Title="StudioUSB" Height="900" Width="1040" MinHeight="760" MinWidth="900"
         WindowStartupLocation="CenterScreen" Background="#FFF5F7FA">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+    </Window.Resources>
+
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="130" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="StudioUSB" FontSize="30" FontWeight="SemiBold" Foreground="#FF172033" />
-            <TextBlock Margin="0,5,0,0" Foreground="#FF5F6B7A"
-                       Text="Pripraví fotografie na web aj tlač a bezpečne ich uloží na USB." />
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="StudioUSB" FontSize="30" FontWeight="SemiBold" Foreground="#FF172033" />
+                    <TextBlock Text="1.1.0" Margin="10,0,0,4" VerticalAlignment="Bottom" Foreground="#FF7A8492" />
+                </StackPanel>
+                <TextBlock x:Name="SubtitleText" Margin="0,5,0,0" Foreground="#FF5F6B7A" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                <TextBlock x:Name="LanguageLabel" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox x:Name="LanguageComboBox" Width="140" DisplayMemberPath="DisplayName" SelectedValuePath="Value"
+                          SelectionChanged="LanguageComboBox_SelectionChanged" />
+            </StackPanel>
+        </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
@@ -27,9 +54,9 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" Text="Zdrojový adresár" />
+            <TextBlock x:Name="SourceFolderLabel" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" />
             <TextBox x:Name="SourceTextBox" Grid.Column="1" Margin="0,0,10,0" IsReadOnly="True" />
-            <Button x:Name="BrowseButton" Grid.Column="2" Content="Vybrať…" Click="BrowseButton_Click" />
+            <Button x:Name="BrowseButton" Grid.Column="2" Click="BrowseButton_Click" />
         </Grid>
 
         <Grid Grid.Row="2" Margin="0,0,0,12">
@@ -38,100 +65,176 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" Text="Cieľové USB" />
+            <TextBlock x:Name="TargetUsbLabel" Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold" />
             <ComboBox x:Name="DriveComboBox" Grid.Column="1" Margin="0,0,10,0" DisplayMemberPath="DisplayName" />
-            <Button x:Name="RefreshButton" Grid.Column="2" Content="Obnoviť" Click="RefreshButton_Click" />
+            <Button x:Name="RefreshButton" Grid.Column="2" Click="RefreshButton_Click" />
         </Grid>
 
-        <Border Grid.Row="3" Padding="14" Margin="0,0,0,12" CornerRadius="8" Background="White"
-                BorderBrush="#FFDDE3EA" BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Padding="14" Margin="0,0,0,12" CornerRadius="8" Background="White" BorderBrush="#FFDDE3EA" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="PrintBlockTitle" Grid.Row="0" Margin="0,0,0,12" FontSize="17" FontWeight="SemiBold" Foreground="#FF172033" />
 
-                <TextBlock Grid.Row="0" Grid.ColumnSpan="4" Margin="0,0,0,10" FontWeight="SemiBold"
-                           Foreground="#FF172033" Text="Nastavenia fotografií" />
+                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="PrintFolderLabel" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="PrintFolderTextBox" Grid.Column="1" MaxLength="64" Text="PRINTSIZE" />
+                        </Grid>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Kvalita JPEG" />
-                <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,24,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="55" />
-                    </Grid.ColumnDefinitions>
-                    <Slider x:Name="QualitySlider" Grid.Column="0" Minimum="1" Maximum="100" Value="80"
-                            TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Right"
-                               Text="{Binding ElementName=QualitySlider, Path=Value, StringFormat={}{0:F0} %}" />
-                </Grid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+                            <CheckBox x:Name="PrintResampleCheckBox" Margin="0,0,28,0" VerticalAlignment="Center"
+                                      Checked="OutputOptions_Changed" Unchecked="OutputOptions_Changed" />
+                            <CheckBox x:Name="PrintNoUpscaleCheckBox" IsChecked="True" VerticalAlignment="Center" />
+                        </StackPanel>
 
-                <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="Prípona názvu" />
-                <TextBox x:Name="SuffixTextBox" Grid.Row="1" Grid.Column="3" Margin="0,0,0,8" MaxLength="64" Text="-websize" />
+                        <Grid x:Name="PrintSettingsPanel" Grid.Row="3">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="165" />
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="75" />
+                                <ColumnDefinition Width="95" />
+                                <ColumnDefinition Width="95" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="PrintSideLabel" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+                            <ComboBox x:Name="PrintSideComboBox" Grid.Row="0" Grid.Column="1" Margin="0,0,14,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" />
+                            <TextBlock x:Name="PrintSizeLabel" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" />
+                            <TextBox x:Name="PrintSizeTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,14,8" Text="6000" />
+                            <TextBlock x:Name="PrintUnitLabel" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" />
+                            <ComboBox x:Name="PrintUnitComboBox" Grid.Row="0" Grid.Column="5" Margin="0,0,14,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" SelectionChanged="UnitComboBox_SelectionChanged" />
+                            <TextBlock x:Name="PrintDpiLabel" Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" />
+                            <ComboBox x:Name="PrintDpiComboBox" Grid.Row="0" Grid.Column="7" Margin="0,0,0,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Adresár web" />
-                <TextBox x:Name="WebFolderTextBox" Grid.Row="2" Grid.Column="1" Margin="0,0,24,0" MaxLength="64" Text="WEBSIZE" />
-                <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="Adresár tlač" />
-                <TextBox x:Name="PrintFolderTextBox" Grid.Row="2" Grid.Column="3" MaxLength="64" Text="PRINTSIZE" />
-            </Grid>
-        </Border>
+                            <TextBlock x:Name="PrintQualityLabel" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
+                            <Slider x:Name="PrintQualitySlider" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6" Minimum="1" Maximum="100"
+                                    Value="95" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,0,14,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="7" VerticalAlignment="Center"
+                                       Text="{Binding ElementName=PrintQualitySlider, Path=Value, StringFormat={}{0:F0} %}" />
+                        </Grid>
+                    </Grid>
+                </Border>
 
-        <Border Grid.Row="4" Padding="14" Margin="0,0,0,12" CornerRadius="8" Background="White"
-                BorderBrush="#FFDDE3EA" BorderThickness="1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="205" />
-                    <ColumnDefinition Width="180" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <CheckBox x:Name="FormatCheckBox" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0"
-                          Content="Pred spracovaním naformátovať USB" Checked="FormatCheckBox_Changed" Unchecked="FormatCheckBox_Changed" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Názov:" />
-                    <TextBox x:Name="VolumeLabelTextBox" Width="125" MaxLength="11" Text="FOTO" IsEnabled="False" />
-                </StackPanel>
-                <TextBlock Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"
-                           Text="Max. veľkosť média:" />
-                <ComboBox x:Name="FormatLimitComboBox" Grid.Column="3" Width="110" HorizontalAlignment="Left"
-                          DisplayMemberPath="DisplayName" SelectedValuePath="GiB" IsEnabled="False"
-                          ToolTip="FAT32 do 32 GiB, exFAT nad 32 GiB" />
-            </Grid>
-        </Border>
+                <Border Padding="14" Margin="0,0,0,12" CornerRadius="8" Background="White" BorderBrush="#FFDDE3EA" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="WebBlockTitle" Grid.Row="0" Margin="0,0,0,12" FontSize="17" FontWeight="SemiBold" Foreground="#FF172033" />
 
-        <Border Grid.Row="5" Padding="12" Margin="0,0,0,12" CornerRadius="8" Background="#FFEAF3FF"
-                BorderBrush="#FFBFD8F5" BorderThickness="1">
-            <TextBlock Foreground="#FF24476B" TextWrapping="Wrap"
-                       Text="Nastavenia sa automaticky ukladajú; zdrojový adresár sa neukladá. Formátovanie používa FAT32 do 32 GiB a exFAT nad 32 GiB." />
-        </Border>
+                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="240" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="WebFolderLabel" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="WebFolderTextBox" Grid.Column="1" Margin="0,0,20,0" MaxLength="64" Text="WEBSIZE" />
+                            <TextBlock x:Name="WebSuffixLabel" Grid.Column="2" VerticalAlignment="Center" />
+                            <TextBox x:Name="SuffixTextBox" Grid.Column="3" MaxLength="64" Text="-websize" />
+                        </Grid>
 
-        <Grid Grid.Row="6">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ProgressBar x:Name="ProgressBar" Grid.Row="0" Height="18" Minimum="0" Maximum="100" Margin="0,0,0,10" />
-            <TextBox x:Name="LogTextBox" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
-                     FontFamily="Consolas" FontSize="12" Background="White" />
-        </Grid>
+                        <CheckBox x:Name="WebNoUpscaleCheckBox" Grid.Row="2" IsChecked="True" Margin="0,0,0,10" />
 
-        <Grid Grid.Row="7" Margin="0,16,0,0">
+                        <Grid Grid.Row="3">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="165" />
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="75" />
+                                <ColumnDefinition Width="95" />
+                                <ColumnDefinition Width="95" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="WebSideLabel" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+                            <ComboBox x:Name="WebSideComboBox" Grid.Row="0" Grid.Column="1" Margin="0,0,14,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" />
+                            <TextBlock x:Name="WebSizeLabel" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" />
+                            <TextBox x:Name="WebSizeTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,14,8" Text="2400" />
+                            <TextBlock x:Name="WebUnitLabel" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" />
+                            <ComboBox x:Name="WebUnitComboBox" Grid.Row="0" Grid.Column="5" Margin="0,0,14,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" SelectionChanged="UnitComboBox_SelectionChanged" />
+                            <TextBlock x:Name="WebDpiLabel" Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" />
+                            <ComboBox x:Name="WebDpiComboBox" Grid.Row="0" Grid.Column="7" Margin="0,0,0,8"
+                                      DisplayMemberPath="DisplayName" SelectedValuePath="Value" />
+
+                            <TextBlock x:Name="WebQualityLabel" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
+                            <Slider x:Name="WebQualitySlider" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6" Minimum="1" Maximum="100"
+                                    Value="80" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,0,14,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="7" VerticalAlignment="Center"
+                                       Text="{Binding ElementName=WebQualitySlider, Path=Value, StringFormat={}{0:F0} %}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Padding="14" Margin="0,0,0,12" CornerRadius="8" Background="White" BorderBrush="#FFDDE3EA" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="FormatCheckBox" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0"
+                                  Checked="FormatCheckBox_Changed" Unchecked="FormatCheckBox_Changed" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock x:Name="VolumeNameLabel" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox x:Name="VolumeLabelTextBox" Width="125" MaxLength="11" Text="FOTO" IsEnabled="False" />
+                        </StackPanel>
+                        <TextBlock x:Name="FormatLimitLabel" Grid.Column="2" VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0" />
+                        <ComboBox x:Name="FormatLimitComboBox" Grid.Column="3" Width="110" HorizontalAlignment="Left"
+                                  DisplayMemberPath="DisplayName" SelectedValuePath="Value" IsEnabled="False"
+                                  ToolTip="FAT32 ≤ 32 GiB / exFAT &gt; 32 GiB" />
+                    </Grid>
+                </Border>
+
+                <Border Padding="12" Margin="0,0,0,12" CornerRadius="8" Background="#FFEAF3FF" BorderBrush="#FFBFD8F5" BorderThickness="1">
+                    <TextBlock x:Name="SettingsNoteText" Foreground="#FF24476B" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ProgressBar x:Name="ProgressBar" Grid.Row="4" Height="18" Minimum="0" Maximum="100" Margin="0,0,0,10" />
+        <TextBox x:Name="LogTextBox" Grid.Row="5" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 FontFamily="Consolas" FontSize="12" Background="White" />
+
+        <Grid Grid.Row="6" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock x:Name="StatusTextBlock" Grid.Column="0" VerticalAlignment="Center" Foreground="#FF445064" Text="Pripravené" />
-            <Button x:Name="CancelButton" Grid.Column="1" Margin="0,0,10,0" Content="Zrušiť" IsEnabled="False" Click="CancelButton_Click" />
+            <TextBlock x:Name="StatusTextBlock" Grid.Column="0" VerticalAlignment="Center" Foreground="#FF445064" />
+            <Button x:Name="CancelButton" Grid.Column="1" Margin="0,0,10,0" IsEnabled="False" Click="CancelButton_Click" />
             <Button x:Name="StartButton" Grid.Column="2" MinWidth="150" Background="#FF1769AA" Foreground="White"
-                    FontWeight="SemiBold" Content="Spustiť" Click="StartButton_Click" />
+                    FontWeight="SemiBold" Click="StartButton_Click" />
         </Grid>
     </Grid>
 </Window>

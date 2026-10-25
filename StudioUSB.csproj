@@ -9,6 +9,9 @@
     <Nullable>enable</Nullable>
     <AssemblyName>StudioUSB</AssemblyName>
     <RootNamespace>StudioUSB</RootNamespace>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SelfContained>false</SelfContained>
     <DebugType>none</DebugType>

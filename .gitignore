@@ -4,6 +4,7 @@ release/
 dist/
 publish/
 FotoUSB-Windows11/
+StudioUSB-Windows11/
 *.zip
 *.user
 .vs/
